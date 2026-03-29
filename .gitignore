@@ -1,0 +1,44 @@
+# ── Secrets & Credentials ────────────────────────────────────────────────────
+.env
+firebase_service_account.json
+
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+
+# ── Virtual Environments ──────────────────────────────────────────────────────
+venv/
+.venv/
+env/
+ENV/
+
+# ── IDEs ─────────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.suo
+*.user
+
+# ── Video / Generated Assets ──────────────────────────────────────────────────
+*.mp4
+*.webm
+*.webp
+make_video.py
+
+# ── OS ───────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Flask ────────────────────────────────────────────────────────────────────
+instance/
+.webassets-cache
+flask_session/
