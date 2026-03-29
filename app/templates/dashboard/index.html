@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — RecuraOps{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_subtitle %}Last scan: {{ kpi.get('last_scan', '')|timeago }}{% endblock %}
+{% block content %}
+
+<div class="kpi-grid">
+  <div class="kpi-card mint">
+    <div class="kpi-card-bg"></div>
+    <div class="kpi-icon"><i data-lucide="indian-rupee"></i></div>
+    <div class="kpi-label">Savings Realized</div>
+    <div class="kpi-value">{{ kpi.get('total_savings_realized_annual', 1056000)|inr }}</div>
+    <div class="kpi-subtext">Annual · verified by agents</div>
+  </div>
+  <div class="kpi-card peach">
+    <div class="kpi-card-bg"></div>
+    <div class="kpi-icon"><i data-lucide="alert-triangle"></i></div>
+    <div class="kpi-label">Active Issues</div>
+    <div class="kpi-value">{{ kpi.get('active_issues', 4) }}</div>
+    <div class="kpi-subtext">Require attention</div>
+  </div>
+  <div class="kpi-card butter">
+    <div class="kpi-card-bg"></div>
+    <div class="kpi-icon"><i data-lucide="clock"></i></div>
+    <div class="kpi-label">Pending Approvals</div>
+    <div class="kpi-value">{{ kpi.get('pending_approvals', 4) }}</div>
+    <div class="kpi-subtext">Awaiting your decision</div>
+  </div>
+  <div class="kpi-card lavender">
+    <div class="kpi-card-bg"></div>
+    <div class="kpi-icon"><i data-lucide="zap"></i></div>
+    <div class="kpi-label">Actions Executed</div>
+    <div class="kpi-value">{{ kpi.get('actions_executed', 2) }}</div>
+    <div class="kpi-subtext">{{ kpi.get('detection_accuracy_pct', 94.7) }}% detection accuracy</div>
+  </div>
+</div>
+
+<div class="dashboard-grid">
+  <div>
+    <div class="section-header">
+      <div><div class="section-title">Recent Anomalies</div><div class="section-subtitle">Latest detections from your cost data</div></div>
+      <a href="{{ url_for('anomalies.list_anomalies') }}" class="btn btn-outline btn-sm">View All <i data-lucide="arrow-right"></i></a>
+    </div>
+    <div class="anomaly-feed">
+      {% if recent_anomalies %}
+        {% for ano in recent_anomalies %}
+        <a href="{{ url_for('anomalies.detail', anomaly_id=ano.id) }}" style="text-decoration:none">
+        <div class="anomaly-card severity-{{ ano.get('severity', 'medium') }}">
+          <div class="anomaly-header">
+            <div>
+              <div class="anomaly-title">{{ ano.get('title', '') }}</div>
+              <div class="anomaly-vendor">{{ ano.get('vendor', '') }}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+              <span class="badge badge-{{ ano.get('severity','medium') }}">{{ ano.get('severity','medium')|title }}</span>
+              <span class="badge badge-{{ ano.get('status','pending').replace(' ','_') }}">{{ ano.get('status','pending').replace('_',' ')|title }}</span>
+            </div>
+          </div>
+          <div style="font-size:.8rem;color:var(--text-muted);margin-bottom:8px;line-height:1.5">
+            {{ ano.get('description','')[:120] }}{% if ano.get('description','')|length > 120 %}…{% endif %}
+          </div>
+          <div class="anomaly-impact">
+            <div><div class="impact-value">{{ ano.get('financial_impact_monthly',0)|inr }}/mo</div><div class="impact-label">Monthly Impact</div></div>
+            <div><div class="impact-value">{{ ano.get('financial_impact_annual',0)|inr }}/yr</div><div class="impact-label">Annual Impact</div></div>
+            <div style="margin-left:auto;font-size:.75rem;color:var(--text-muted)">{{ ano.get('detected_at','')|timeago }}</div>
+          </div>
+        </div>
+        </a>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state"><i data-lucide="check-circle"></i><h3>No anomalies detected</h3><p>Run a scan to check for cost leaks.</p></div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div>
+    <div class="section-header">
+      <div><div class="section-title">Savings Breakdown</div><div class="section-subtitle">By category · annual potential</div></div>
+    </div>
+    <div class="card" style="padding:24px">
+      <div class="chart-container">
+        <canvas id="savings-donut"
+          data-labels='{{ savings_breakdown.keys()|list|tojson }}'
+          data-values='{{ savings_breakdown.values()|list|tojson }}'
+          style="max-height:210px"></canvas>
+      </div>
+      <div class="chart-legend">
+        {% set colors = ['#D6EAF5','#D4EDE1','#E8E3F5'] %}
+        {% set borders = ['#1a5276','#1d6742','#5b2c8d'] %}
+        {% for label, value in savings_breakdown.items() %}
+        <div class="legend-item">
+          <div class="legend-dot" style="background:{{ colors[loop.index0%3] }};border:2px solid {{ borders[loop.index0%3] }}"></div>
+          <span>{{ label }}</span>
+          <span class="legend-value" style="color:var(--accent-forest)">{{ value|inr }}</span>
+        </div>
+        {% endfor %}
+      </div>
+      <hr class="divider">
+      <div style="text-align:center">
+        <div style="font-family:'Fraunces',serif;font-size:1.4rem;font-weight:700;color:var(--accent-forest)">{{ savings_breakdown.values()|sum|inr }}</div>
+        <div class="text-muted" style="font-size:.78rem;margin-top:4px">Total Annual Potential</div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px;padding:20px;background:var(--pastel-butter);border:1px solid #e8d878">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <i data-lucide="trending-down" style="width:18px;height:18px;color:#8B6914"></i>
+        <span style="font-weight:700;font-size:.85rem;color:#7d6008">Potential Remaining</span>
+      </div>
+      <div style="font-family:'Fraunces',serif;font-size:1.5rem;font-weight:700;color:#8B6914">{{ kpi.get('total_savings_potential_annual', 2739200)|inr }}</div>
+      <div style="font-size:.75rem;color:#7d6008;margin-top:4px">Approve pending actions to unlock this</div>
+    </div>
+  </div>
+</div>
+
+<div class="section-header">
+  <div><div class="section-title">Agent Activity</div><div class="section-subtitle">Live status of your 5 autonomous agents</div></div>
+</div>
+<div class="card" style="padding:28px">
+  <div class="agent-timeline">
+    {% set icons = ['radio','search','brain','zap','shield-check'] %}
+    {% for key, info in agent_status.items() %}
+    <div class="timeline-step">
+      <div class="timeline-icon {{ info.status }}"><i data-lucide="{{ icons[loop.index0 % 5] }}"></i></div>
+      <div class="timeline-label">{{ info.get('label', key.replace('_agent','').title()) }}</div>
+      <div class="timeline-meta">{{ info.last_run|timeago if info.last_run else '—' }}</div>
+      <div class="timeline-meta">{{ info.get('items_processed', 0) }} items</div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

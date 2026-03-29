@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Action Log — RecuraOps{% endblock %}
+{% block page_title %}Action Log{% endblock %}
+{% block page_subtitle %}Complete audit trail of all executed actions{% endblock %}
+{% block content %}
+<div class="summary-bar">
+  <div style="display:flex;align-items:center;gap:12px;flex:1">
+    <i data-lucide="shield-check" style="width:28px;height:28px;color:var(--accent-forest);flex-shrink:0"></i>
+    <div>
+      <div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#1d6742">Total Actions Executed</div>
+      <div style="font-size:.8rem;color:#1d6742;margin-top:2px">{{ actions|length }} action{% if actions|length != 1 %}s{% endif %} verified by agents</div>
+    </div>
+  </div>
+  <div class="summary-stat"><div class="summary-stat-value">{{ actions|length }}</div><div class="summary-stat-label">Actions</div></div>
+  <div class="summary-stat"><div class="summary-stat-value">{{ total_savings_monthly|inr }}</div><div class="summary-stat-label">Saved / Month</div></div>
+  <div class="summary-stat"><div class="summary-stat-value">{{ total_savings_annual|inr }}</div><div class="summary-stat-label">Saved / Year</div></div>
+</div>
+
+{% if actions %}
+<div class="data-table-wrap">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th style="width:36px"></th><th>Action ID</th><th>Type</th><th>Description</th>
+        <th>Approved By</th><th>Executed At</th><th>Monthly Savings</th><th>Annual Savings</th><th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for act in actions %}
+      {% set row_id = 'act-' ~ act.id %}
+      <tr class="row-expandable" data-expand="{{ row_id }}" style="cursor:pointer">
+        <td><i data-lucide="chevron-right" class="expand-icon" style="width:16px;height:16px;color:var(--text-muted);transition:transform .2s"></i></td>
+        <td><span style="font-family:monospace;font-size:.8rem;background:var(--bg-subtle);padding:3px 8px;border-radius:6px">{{ act.id }}</span></td>
+        <td>
+          <div class="action-type-icon {{ act.get('action','') }}" style="display:inline-flex">
+            {% if act.get('action') == 'block_payment' %}<i data-lucide="ban"></i>
+            {% elif act.get('action') == 'cancel_licenses' %}<i data-lucide="user-minus"></i>
+            {% elif act.get('action') == 'shutdown_resource' %}<i data-lucide="power-off"></i>
+            {% else %}<i data-lucide="bell"></i>{% endif %}
+          </div>
+          <span style="margin-left:8px;font-size:.82rem;font-weight:500;text-transform:capitalize">{{ act.get('action','').replace('_',' ') }}</span>
+        </td>
+        <td style="max-width:260px"><div class="truncate" style="font-size:.82rem">{{ act.get('description','') }}</div></td>
+        <td class="td-muted">{{ act.get('approved_by','') }}</td>
+        <td class="td-muted">{{ act.get('timestamp','')|dateformat('%d %b %Y') }}</td>
+        <td class="td-money">{{ act.get('savings_realized_monthly',0)|inr }}</td>
+        <td class="td-money">{{ act.get('savings_realized_annual',0)|inr }}</td>
+        <td><span class="badge badge-{{ act.get('verification_status', act.get('status','completed')) }}">{{ act.get('verification_status', act.get('status','completed'))|title }}</span></td>
+      </tr>
+      <tr id="{{ row_id }}" style="display:none;background:var(--bg-subtle)">
+        <td colspan="9" style="padding:18px 24px">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px">
+            <div>
+              <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:6px">Description</div>
+              <div style="font-size:.85rem;line-height:1.6">{{ act.get('description','—') }}</div>
+            </div>
+            <div>
+              <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:6px">Execution Details</div>
+              <div style="font-size:.82rem;color:var(--text-secondary)">
+                <div>Executed by: <strong>{{ act.get('executed_by','action_agent') }}</strong></div>
+                <div style="margin-top:4px">Approved by: <strong>{{ act.get('approved_by','') }}</strong></div>
+                <div style="margin-top:4px">Time: <strong>{{ act.get('timestamp','')|dateformat }}</strong></div>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:6px">Verification</div>
+              <span class="badge badge-{{ act.get('verification_status','completed') }}">{{ act.get('verification_status','Pending')|title }}</span>
+              {% if act.get('verified_at') %}<div style="font-size:.75rem;color:var(--text-muted);margin-top:6px">Verified {{ act.get('verified_at','')|timeago }}</div>{% endif %}
+              <div style="margin-top:10px">
+                <div style="font-size:.78rem;color:var(--text-muted)">Savings locked:</div>
+                <div style="font-family:'Fraunces',serif;font-size:1.1rem;font-weight:700;color:var(--accent-forest)">{{ act.get('savings_realized_annual',0)|inr }}/year</div>
+              </div>
+            </div>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="card"><div class="empty-state"><i data-lucide="file-x"></i><h3>No actions recorded yet</h3><p>Approve pending requests to see the action log.</p></div></div>
+{% endif %}
+{% endblock %}

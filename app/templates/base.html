@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}RecuraOps{% endblock %}</title>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/recuraops-logo.png') }}" />
+  <meta name="description" content="RecuraOps — Autonomous Cost Intelligence Engine">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  {% block head %}{% endblock %}
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <img
+        src="{{ url_for('static', filename='images/recuraops-logo.png') }}"
+        alt="RecuraOps Logo"
+        class="sidebar-logo-img"
+      />
+      <span class="sidebar-brand-text">RecuraOps</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="{{ url_for('dashboard.index') }}" class="nav-item {% if active_page == 'dashboard' %}active{% endif %}">
+        <i data-lucide="layout-dashboard"></i><span>Dashboard</span>
+      </a>
+      <a href="{{ url_for('anomalies.list_anomalies') }}" class="nav-item {% if active_page == 'anomalies' %}active{% endif %}">
+        <i data-lucide="alert-triangle"></i><span>Anomalies</span>
+      </a>
+      <a href="{{ url_for('approvals.list_approvals') }}" class="nav-item {% if active_page == 'approvals' %}active{% endif %}">
+        <i data-lucide="check-square"></i><span>Approvals</span>
+      </a>
+      <a href="{{ url_for('actions.log') }}" class="nav-item {% if active_page == 'actions' %}active{% endif %}">
+        <i data-lucide="activity"></i><span>Action Log</span>
+      </a>
+    </nav>
+    <div style="padding:0 12px;margin-top:auto">
+      <div class="agent-status-widget">
+        <div class="widget-title">Agent Status</div>
+        <div class="agent-dots">
+          {% for key, info in agent_status.items() %}
+          <div class="agent-dot-item" title="{{ key }}: {{ info.status }}">
+            <div class="dot dot-{{ info.status }}"></div>
+            <span>{{ info.get('label', key.replace('_agent','').title()) }}</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-avatar">{{ current_user.initials }}</div>
+        <div class="user-info">
+          <div class="user-name">{{ current_user.name }}</div>
+          <div class="user-role">{{ current_user.designation or current_user.role|title }}</div>
+        </div>
+        <a href="{{ url_for('auth.logout') }}" class="logout-btn" title="Logout">
+          <i data-lucide="log-out"></i>
+        </a>
+      </div>
+    </div>
+  </aside>
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <h2>{% block page_title %}Dashboard{% endblock %}</h2>
+        <p>{% block page_subtitle %}{% endblock %}</p>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-outline btn-sm scan-btn" id="scan-btn">
+          <i data-lucide="refresh-cw"></i><span class="btn-text">Run Scan</span>
+        </button>
+        {% block topbar_actions %}{% endblock %}
+      </div>
+    </header>
+    <div class="page-content">
+      {% if error is defined and error %}
+      <div class="alert alert-error">
+        <i data-lucide="alert-circle"></i><span>{{ error }}</span>
+      </div>
+      {% endif %}
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+</div>
+<div id="toast-container"></div>
+<div class="modal-overlay" id="confirm-modal">
+  <div class="modal">
+    <h3 class="modal-title" id="modal-title-text"></h3>
+    <div class="modal-body">
+      <p>This action will be executed immediately by the Action Agent.</p>
+      <div class="ai-reasoning-block" style="margin-top:14px">
+        <div class="ai-reasoning-header"><i data-lucide="zap" style="width:14px;height:14px"></i> Projected Savings</div>
+        <div class="ai-reasoning-text fw-600" id="modal-impact-text" style="font-size:1.1rem;color:var(--accent-forest)"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" id="modal-cancel">Cancel</button>
+      <button class="btn btn-primary" id="modal-confirm">Confirm &amp; Execute</button>
+    </div>
+  </div>
+</div>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

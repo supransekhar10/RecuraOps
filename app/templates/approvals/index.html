@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Approvals — RecuraOps{% endblock %}
+{% block page_title %}Approval Queue{% endblock %}
+{% block page_subtitle %}{{ pending_approvals|length }} pending · approve to trigger Action Agent{% endblock %}
+{% block content %}
+{% if pending_approvals or resolved_approvals %}
+<div class="approvals-layout">
+  <div class="approvals-list">
+    <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:14px">Pending ({{ pending_approvals|length }})</div>
+    {% if pending_approvals %}
+      {% for apr in pending_approvals %}
+      <div class="approval-card priority-{{ apr.get('priority','medium') }}" data-id="{{ apr.id }}">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px">
+          <span class="badge badge-{{ apr.get('priority','medium') }}">{{ apr.get('priority','medium')|title }}</span>
+          <span class="badge badge-pending">Pending</span>
+        </div>
+        <div class="approval-card-title">{{ apr.get('title','') }}</div>
+        <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:4px">{{ apr.get('action','').replace('_',' ')|title }} · {{ apr.get('requested_at','')|timeago }}</div>
+        <div class="approval-impact">{{ apr.get('impact','') }}</div>
+        <div class="approval-actions">
+          <button class="btn btn-primary btn-sm approve-btn" data-id="{{ apr.id }}" data-title="{{ apr.get('title','') }}" data-impact="{{ apr.get('impact','') }}" onclick="event.stopPropagation()"><i data-lucide="check"></i> Approve</button>
+          <button class="btn btn-outline btn-sm reject-btn" data-id="{{ apr.id }}" onclick="event.stopPropagation()"><i data-lucide="x"></i> Reject</button>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+    <div class="empty-state" style="padding:32px 0"><i data-lucide="check-circle-2"></i><h3>All caught up!</h3><p>No pending approvals.</p></div>
+    {% endif %}
+    {% if resolved_approvals %}
+    <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin:20px 0 14px">Resolved ({{ resolved_approvals|length }})</div>
+    {% for apr in resolved_approvals %}
+    <div class="approval-card" style="opacity:.7" data-id="{{ apr.id }}">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px">
+        <div class="approval-card-title" style="font-size:.9rem">{{ apr.get('title','') }}</div>
+        <span class="badge badge-{{ apr.get('status','') }}">{{ apr.get('status','')|title }}</span>
+      </div>
+      <div style="font-size:.75rem;color:var(--text-muted)">{{ apr.get('impact','') }}</div>
+    </div>
+    {% endfor %}
+    {% endif %}
+  </div>
+  <div class="approvals-divider"></div>
+  <div class="approval-detail-panel">
+    <div id="panel-placeholder" class="detail-panel-placeholder"><i data-lucide="mouse-pointer-click"></i><p>Select an approval to see details</p></div>
+    {% for apr in pending_approvals + resolved_approvals %}
+    <div id="detail-{{ apr.id }}" class="detail-pane" style="display:none">
+      <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:14px">Action Detail</div>
+      <h3 style="font-family:'Fraunces',serif;font-size:1.15rem;margin-bottom:8px">{{ apr.get('title','') }}</h3>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+        <span class="badge badge-{{ apr.get('priority','medium') }}">{{ apr.get('priority','medium')|title }} Priority</span>
+        <span class="badge badge-{{ apr.get('status','pending') }}">{{ apr.get('status','pending')|title }}</span>
+      </div>
+      <div style="font-family:'Fraunces',serif;font-size:1.6rem;font-weight:700;color:var(--accent-forest);margin:16px 0">{{ apr.get('impact','') }}</div>
+      <div style="margin-bottom:16px;padding:14px;background:var(--bg-subtle);border-radius:var(--radius-sm)">
+        <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:8px">Action to Execute</div>
+        <div style="font-weight:600;text-transform:capitalize">{{ apr.get('action','').replace('_',' ') }}</div>
+      </div>
+      {% if apr.get('anomaly') %}
+      {% set ano = apr.anomaly %}
+      <div class="ai-reasoning-block">
+        <div class="ai-reasoning-header"><i data-lucide="alert-triangle" style="width:13px;height:13px"></i> Linked Anomaly</div>
+        <div class="ai-reasoning-text">
+          <strong>{{ ano.get('title','') }}</strong><br>
+          {{ ano.get('description','')[:200] }}{% if ano.get('description','')|length > 200 %}…{% endif %}
+          {% if ano.get('ai_reasoning') %}<br><br><em>AI: {{ ano.get('ai_reasoning','') }}</em>{% endif %}
+        </div>
+      </div>
+      {% endif %}
+      <div style="font-size:.75rem;color:var(--text-muted);margin-top:12px">Requested {{ apr.get('requested_at','')|timeago }}</div>
+      {% if apr.get('status') == 'pending' %}
+      <div class="approval-actions" style="margin-top:20px">
+        <button class="btn btn-primary approve-btn" data-id="{{ apr.id }}" data-title="{{ apr.get('title','') }}" data-impact="{{ apr.get('impact','') }}"><i data-lucide="check"></i> Approve &amp; Execute</button>
+        <button class="btn btn-danger reject-btn" data-id="{{ apr.id }}"><i data-lucide="x"></i> Reject</button>
+      </div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% else %}
+<div class="card"><div class="empty-state"><i data-lucide="inbox"></i><h3>No approval requests</h3><p>Run a scan to detect anomalies and generate approval requests.</p></div></div>
+{% endif %}
+{% endblock %}

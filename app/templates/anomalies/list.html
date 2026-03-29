@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Anomalies — RecuraOps{% endblock %}
+{% block page_title %}Anomalies{% endblock %}
+{% block page_subtitle %}{{ anomalies|length }} issue{% if anomalies|length != 1 %}s{% endif %} detected{% endblock %}
+{% block content %}
+
+<div class="filter-bar">
+  <span class="filter-label">Type:</span>
+  <a href="{{ url_for('anomalies.list_anomalies', type='all', severity=filter_severity, status=filter_status) }}" class="filter-pill {% if filter_type == 'all' %}active{% endif %}">All</a>
+  <a href="{{ url_for('anomalies.list_anomalies', type='duplicate_invoice', severity=filter_severity, status=filter_status) }}" class="filter-pill {% if filter_type == 'duplicate_invoice' %}active{% endif %}">Duplicate Invoice</a>
+  <a href="{{ url_for('anomalies.list_anomalies', type='inactive_subscription', severity=filter_severity, status=filter_status) }}" class="filter-pill {% if filter_type == 'inactive_subscription' %}active{% endif %}">Unused SaaS</a>
+  <a href="{{ url_for('anomalies.list_anomalies', type='idle_cloud_resource', severity=filter_severity, status=filter_status) }}" class="filter-pill {% if filter_type == 'idle_cloud_resource' %}active{% endif %}">Idle Cloud</a>
+  <span class="filter-label" style="margin-left:12px">Severity:</span>
+  <a href="{{ url_for('anomalies.list_anomalies', type=filter_type, severity='all', status=filter_status) }}" class="filter-pill {% if filter_severity == 'all' %}active{% endif %}">All</a>
+  <a href="{{ url_for('anomalies.list_anomalies', type=filter_type, severity='high', status=filter_status) }}" class="filter-pill {% if filter_severity == 'high' %}active{% endif %}">High</a>
+  <a href="{{ url_for('anomalies.list_anomalies', type=filter_type, severity='medium', status=filter_status) }}" class="filter-pill {% if filter_severity == 'medium' %}active{% endif %}">Medium</a>
+  <span class="filter-label" style="margin-left:12px">Status:</span>
+  <a href="{{ url_for('anomalies.list_anomalies', type=filter_type, severity=filter_severity, status='all') }}" class="filter-pill {% if filter_status == 'all' %}active{% endif %}">All</a>
+  <a href="{{ url_for('anomalies.list_anomalies', type=filter_type, severity=filter_severity, status='pending_approval') }}" class="filter-pill {% if filter_status == 'pending_approval' %}active{% endif %}">Pending</a>
+  <a href="{{ url_for('anomalies.list_anomalies', type=filter_type, severity=filter_severity, status='approved') }}" class="filter-pill {% if filter_status == 'approved' %}active{% endif %}">Approved</a>
+</div>
+
+{% if anomalies %}
+<div class="data-table-wrap">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th style="width:36px"></th><th>Type</th><th>Title &amp; Vendor</th>
+        <th>Monthly</th><th>Annual</th><th>Severity</th><th>Status</th><th>Detected</th><th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for ano in anomalies %}
+      {% set row_id = 'exp-' ~ ano.id %}
+      <tr class="row-expandable" data-expand="{{ row_id }}" style="cursor:pointer">
+        <td><i data-lucide="chevron-right" class="expand-icon" style="width:16px;height:16px;color:var(--text-muted);transition:transform .2s"></i></td>
+        <td>
+          {% if ano.get('type') == 'duplicate_invoice' %}
+            <span class="badge" style="background:var(--pastel-sky);color:#1a5276"><i data-lucide="copy" style="width:11px;height:11px"></i> Duplicate</span>
+          {% elif ano.get('type') == 'inactive_subscription' %}
+            <span class="badge" style="background:var(--pastel-butter);color:#7d6008"><i data-lucide="users" style="width:11px;height:11px"></i> SaaS</span>
+          {% else %}
+            <span class="badge" style="background:var(--pastel-peach);color:#8b4513"><i data-lucide="cloud" style="width:11px;height:11px"></i> Cloud</span>
+          {% endif %}
+        </td>
+        <td><div class="fw-600" style="font-size:.875rem">{{ ano.get('title','') }}</div><div class="td-muted">{{ ano.get('vendor','') }}</div></td>
+        <td class="td-money">{{ ano.get('financial_impact_monthly',0)|inr }}</td>
+        <td class="td-money">{{ ano.get('financial_impact_annual',0)|inr }}</td>
+        <td><span class="badge badge-{{ ano.get('severity','medium') }}">{{ ano.get('severity','medium')|title }}</span></td>
+        <td><span class="badge badge-{{ ano.get('status','pending').replace(' ','_') }}">{{ ano.get('status','pending').replace('_',' ')|title }}</span></td>
+        <td class="td-muted">{{ ano.get('detected_at','')|timeago }}</td>
+        <td><a href="{{ url_for('anomalies.detail', anomaly_id=ano.id) }}" class="btn btn-outline btn-xs">Detail <i data-lucide="arrow-right" style="width:12px;height:12px"></i></a></td>
+      </tr>
+      <tr id="{{ row_id }}" style="display:none;background:var(--bg-subtle)">
+        <td colspan="9" style="padding:16px 24px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+            <div>
+              <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:6px">Description</div>
+              <div style="font-size:.85rem;line-height:1.6">{{ ano.get('description','') }}</div>
+            </div>
+            <div>
+              {% if ano.get('ai_reasoning') %}
+              <div class="ai-reasoning-block" style="margin:0">
+                <div class="ai-reasoning-header"><i data-lucide="sparkles" style="width:12px;height:12px"></i> AI Reasoning</div>
+                <div class="ai-reasoning-text">{{ ano.get('ai_reasoning','') }}</div>
+              </div>
+              {% endif %}
+              <div style="margin-top:10px;display:flex;align-items:center;gap:8px">
+                <span style="font-size:.78rem;color:var(--text-muted)">Recommended:</span>
+                <span class="badge badge-pending">{{ ano.get('recommended_action','').replace('_',' ')|title }}</span>
+              </div>
+            </div>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="card"><div class="empty-state"><i data-lucide="check-circle-2"></i><h3>No anomalies found</h3><p>Try changing filters or running a scan.</p></div></div>
+{% endif %}
+{% endblock %}

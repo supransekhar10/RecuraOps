@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}{{ anomaly.get('title','Anomaly') if anomaly else 'Not Found' }} — RecuraOps{% endblock %}
+{% block page_title %}Anomaly Detail{% endblock %}
+{% block page_subtitle %}<a href="{{ url_for('anomalies.list_anomalies') }}" style="color:var(--text-muted)">Anomalies</a> <span style="margin:0 6px;color:var(--border)">›</span> {{ anomaly.get('id','') if anomaly else '' }}{% endblock %}
+{% block content %}
+{% if not anomaly %}
+<div class="card"><div class="empty-state"><i data-lucide="alert-circle"></i><h3>Anomaly not found</h3></div></div>
+{% else %}
+<div style="display:grid;grid-template-columns:1fr 340px;gap:24px">
+  <div>
+    <div class="card">
+      <div style="padding:24px 24px 0">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <span class="badge badge-{{ anomaly.get('severity','medium') }}">{{ anomaly.get('severity','medium')|title }}</span>
+          <span class="badge badge-{{ anomaly.get('status','').replace(' ','_') }}">{{ anomaly.get('status','').replace('_',' ')|title }}</span>
+          {% if anomaly.get('action_taken') %}<span class="badge badge-completed"><i data-lucide="check" style="width:10px;height:10px"></i> Action Taken</span>{% endif %}
+        </div>
+        <h1 style="font-size:1.4rem">{{ anomaly.get('title','') }}</h1>
+        <div style="color:var(--text-muted);font-size:.875rem;margin-top:4px">{{ anomaly.get('vendor','') }} · Detected {{ anomaly.get('detected_at','')|timeago }} · <span style="text-transform:capitalize">{{ anomaly.get('type','').replace('_',' ') }}</span></div>
+      </div>
+      <div class="card-body">
+        <div style="font-size:.9rem;line-height:1.7;color:var(--text-secondary);margin-bottom:24px;padding:16px;background:var(--bg-subtle);border-radius:var(--radius-sm)">{{ anomaly.get('description','') }}</div>
+        {% if anomaly.get('ai_reasoning') %}
+        <div class="ai-reasoning-block">
+          <div class="ai-reasoning-header"><i data-lucide="sparkles" style="width:14px;height:14px"></i> GPT-4o Decision Analysis</div>
+          <div class="ai-reasoning-text">{{ anomaly.get('ai_reasoning') }}</div>
+        </div>
+        {% endif %}
+        <div style="display:flex;align-items:center;gap:12px;margin-top:20px;padding:14px 16px;background:var(--bg-subtle);border-radius:var(--radius-sm)">
+          <i data-lucide="arrow-right-circle" style="width:20px;height:20px;color:var(--accent-forest);flex-shrink:0"></i>
+          <div>
+            <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted)">Recommended Action</div>
+            <div style="font-weight:600;font-size:.9rem;margin-top:2px">{{ anomaly.get('recommended_action','').replace('_',' ')|title }}</div>
+          </div>
+        </div>
+        {% if anomaly.get('approved_by') %}
+        <div style="margin-top:16px;padding:12px 16px;background:var(--pastel-mint);border-radius:var(--radius-sm);border:1px solid #a8d8bd">
+          <div style="font-size:.78rem;font-weight:600;color:#1d6742">✓ Approved by {{ anomaly.get('approved_by') }} · {{ anomaly.get('approved_at','')|timeago }}</div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="card" style="padding:24px;margin-bottom:16px">
+      <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:16px">Financial Impact</div>
+      <div style="margin-bottom:20px">
+        <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:4px">Monthly</div>
+        <div style="font-family:'Fraunces',serif;font-size:2rem;font-weight:700;color:var(--accent-forest)">{{ anomaly.get('financial_impact_monthly',0)|inr }}</div>
+      </div>
+      <div>
+        <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:4px">Annual</div>
+        <div style="font-family:'Fraunces',serif;font-size:1.4rem;font-weight:600;color:var(--text-primary)">{{ anomaly.get('financial_impact_annual',0)|inr }}</div>
+      </div>
+      <hr class="divider">
+      <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:8px">Detection Agent</div>
+      <span class="badge" style="background:var(--pastel-lavender);color:var(--accent-plum)"><i data-lucide="cpu" style="width:11px;height:11px"></i> {{ anomaly.get('agent','detection_agent').replace('_',' ')|title }}</span>
+    </div>
+    <div style="display:flex;gap:10px">
+      <a href="{{ url_for('approvals.list_approvals') }}" class="btn btn-primary" style="flex:1;justify-content:center"><i data-lucide="check-square"></i> Go to Approvals</a>
+      <a href="{{ url_for('anomalies.list_anomalies') }}" class="btn btn-outline"><i data-lucide="arrow-left"></i></a>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
