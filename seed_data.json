@@ -1,0 +1,49 @@
+{
+  "users": {
+    "user-admin":    {"name":"Arjun Mehta",    "email":"admin@recuraops.io",    "role":"admin",    "designation":"CFO",              "avatar_initials":"AM"},
+    "user-analyst":  {"name":"Priya Rangan",   "email":"analyst@recuraops.io",  "role":"analyst",  "designation":"Cost Analyst",      "avatar_initials":"PR"},
+    "user-approver": {"name":"Karthik Sundaram","email":"approver@recuraops.io","role":"approver", "designation":"Finance Manager",   "avatar_initials":"KS"}
+  },
+  "vendor_invoices": {
+    "INV-2025-001": {"vendor":"Salesforce India Pvt Ltd","amount":85000,"currency":"INR","date":"2025-03-01","category":"SaaS","status":"paid","invoice_ref":"SF-IN-8821"},
+    "INV-2025-002": {"vendor":"Salesforce India Pvt Ltd","amount":85000,"currency":"INR","date":"2025-03-01","category":"SaaS","status":"pending","invoice_ref":"SF-IN-8821","duplicate_flag":true},
+    "INV-2025-003": {"vendor":"AWS India","amount":142000,"currency":"INR","date":"2025-03-05","category":"Cloud","status":"paid","invoice_ref":"AWS-MAR-0043"},
+    "INV-2025-004": {"vendor":"Zoho Corporation","amount":18500,"currency":"INR","date":"2025-02-28","category":"SaaS","status":"paid","invoice_ref":"ZH-FEB-112"},
+    "INV-2025-005": {"vendor":"Zoho Corporation","amount":18500,"currency":"INR","date":"2025-03-01","category":"SaaS","status":"pending","invoice_ref":"ZH-FEB-112","duplicate_flag":true}
+  },
+  "saas_subscriptions": {
+    "SUB-001": {"tool":"Slack","plan":"Pro","seats":120,"active_users_30d":14,"monthly_cost":72000,"utilization_pct":11.6,"renewal_date":"2025-04-15","status":"active"},
+    "SUB-002": {"tool":"Notion","plan":"Business","seats":80,"active_users_30d":9,"monthly_cost":24000,"utilization_pct":11.25,"renewal_date":"2025-04-20","status":"active"},
+    "SUB-003": {"tool":"Figma","plan":"Organization","seats":30,"active_users_30d":28,"monthly_cost":19500,"utilization_pct":93.3,"renewal_date":"2025-05-01","status":"active"},
+    "SUB-004": {"tool":"Miro","plan":"Business","seats":50,"active_users_30d":3,"monthly_cost":15000,"utilization_pct":6.0,"renewal_date":"2025-04-10","status":"active"},
+    "SUB-005": {"tool":"Jira","plan":"Standard","seats":100,"active_users_30d":87,"monthly_cost":33000,"utilization_pct":87.0,"renewal_date":"2025-06-01","status":"active"}
+  },
+  "cloud_resources": {
+    "RES-001": {"provider":"AWS","resource_type":"EC2 Instance","instance_id":"i-0a4b2c3d4e5f6g7h8","region":"ap-south-1","monthly_cost":28000,"cpu_avg_7d":1.2,"memory_avg_7d":3.4,"last_active":"2025-02-10T11:30:00Z","status":"running","idle_flag":true},
+    "RES-002": {"provider":"AWS","resource_type":"RDS Instance","instance_id":"db-prod-analytics-01","region":"ap-south-1","monthly_cost":41000,"cpu_avg_7d":0.8,"memory_avg_7d":2.1,"last_active":"2025-01-28T08:00:00Z","status":"running","idle_flag":true},
+    "RES-003": {"provider":"GCP","resource_type":"Compute Engine VM","instance_id":"gce-staging-worker-03","region":"asia-south1","monthly_cost":12500,"cpu_avg_7d":0.3,"memory_avg_7d":1.1,"last_active":"2025-02-20T15:20:00Z","status":"running","idle_flag":true}
+  },
+  "anomalies": {
+    "ANO-001": {"type":"duplicate_invoice","severity":"high","title":"Duplicate Invoice Detected","description":"Invoice SF-IN-8821 from Salesforce India was paid on Mar 1 and is pending payment again for the same amount of \u20b985,000. This is a clear duplicate payment risk.","affected_entity":"INV-2025-002","vendor":"Salesforce India Pvt Ltd","financial_impact_monthly":85000,"financial_impact_annual":1020000,"detected_at":"2025-03-15T10:22:00Z","status":"pending_approval","recommended_action":"block_payment","ai_reasoning":"The same invoice reference SF-IN-8821 appears twice. Blocking this payment prevents a \u20b985,000 duplicate charge from Salesforce India.","agent":"detection_agent"},
+    "ANO-002": {"type":"duplicate_invoice","severity":"medium","title":"Duplicate Invoice \u2014 Zoho","description":"Invoice ZH-FEB-112 from Zoho Corporation appears twice for Feb/Mar billing cycle at \u20b918,500 each.","affected_entity":"INV-2025-005","vendor":"Zoho Corporation","financial_impact_monthly":18500,"financial_impact_annual":222000,"detected_at":"2025-03-15T10:23:00Z","status":"pending_approval","recommended_action":"block_payment","ai_reasoning":"Zoho invoice ZH-FEB-112 has been processed once. The pending copy should be blocked to avoid duplicate payment of \u20b918,500.","agent":"detection_agent"},
+    "ANO-003": {"type":"inactive_subscription","severity":"high","title":"Slack \u2014 88% Seats Unused","description":"120 Slack Pro seats purchased. Only 14 active in last 30 days (11.6% utilization). Recommend downsizing to 20-seat plan.","affected_entity":"SUB-001","vendor":"Slack","financial_impact_monthly":60000,"financial_impact_annual":720000,"detected_at":"2025-03-14T08:00:00Z","status":"approved","recommended_action":"cancel_licenses","action_taken":true,"action_timestamp":"2025-03-14T12:00:00Z","approved_by":"approver@recuraops.io","approved_at":"2025-03-14T11:55:00Z","ai_reasoning":"106 out of 120 Slack seats are idle. Downsizing to 20 seats saves \u20b960,000 per month with no service impact.","agent":"detection_agent"},
+    "ANO-004": {"type":"inactive_subscription","severity":"medium","title":"Miro \u2014 94% Seats Unused","description":"50 Miro Business seats active. Only 3 users logged in past 30 days (6% utilization). Renewal due Apr 10.","affected_entity":"SUB-004","vendor":"Miro","financial_impact_monthly":14100,"financial_impact_annual":169200,"detected_at":"2025-03-15T08:00:00Z","status":"pending_approval","recommended_action":"cancel_licenses","ai_reasoning":"With only 3 active users out of 50 seats, Miro is severely underutilized. Downsizing before Apr 10 renewal saves \u20b914,100/month.","agent":"detection_agent"},
+    "ANO-005": {"type":"idle_cloud_resource","severity":"high","title":"Idle EC2 Instance \u2014 ap-south-1","description":"EC2 instance i-0a4b2c3d4e5f6g7h8 has averaged 1.2% CPU over 7 days. Last meaningful workload: Feb 10.","affected_entity":"RES-001","vendor":"AWS","financial_impact_monthly":28000,"financial_impact_annual":336000,"detected_at":"2025-03-13T09:00:00Z","status":"approved","recommended_action":"shutdown_resource","action_taken":true,"action_timestamp":"2025-03-13T14:30:00Z","approved_by":"admin@recuraops.io","approved_at":"2025-03-13T14:25:00Z","ai_reasoning":"This EC2 instance has near-zero CPU for over 30 days. Shutting it down with a snapshot saves \u20b928,000/month.","agent":"detection_agent"},
+    "ANO-006": {"type":"idle_cloud_resource","severity":"high","title":"Idle RDS Instance \u2014 db-prod-analytics-01","description":"RDS instance averaging 0.8% CPU. Last active Jan 28. Estimated waste: \u20b941,000/month.","affected_entity":"RES-002","vendor":"AWS","financial_impact_monthly":41000,"financial_impact_annual":492000,"detected_at":"2025-03-15T09:15:00Z","status":"pending_approval","recommended_action":"shutdown_resource","ai_reasoning":"db-prod-analytics-01 has been idle since January 28 with 0.8% CPU. Burning \u20b941,000/month for no production workload.","agent":"detection_agent"}
+  },
+  "approval_requests": {
+    "APR-001": {"anomaly_id":"ANO-001","title":"Block Duplicate Salesforce Payment","requested_by":"system_agent","requested_at":"2025-03-15T10:25:00Z","action":"block_payment","impact":"Prevent \u20b985,000 duplicate payment \u00b7 Save \u20b910,20,000/year","status":"pending","priority":"high"},
+    "APR-002": {"anomaly_id":"ANO-002","title":"Block Duplicate Zoho Payment","requested_by":"system_agent","requested_at":"2025-03-15T10:26:00Z","action":"block_payment","impact":"Prevent \u20b918,500 duplicate payment \u00b7 Save \u20b92,22,000/year","status":"pending","priority":"medium"},
+    "APR-003": {"anomaly_id":"ANO-004","title":"Cancel 47 Unused Miro Seats","requested_by":"system_agent","requested_at":"2025-03-15T08:05:00Z","action":"cancel_licenses","impact":"Save \u20b914,100/month \u00b7 \u20b91,69,200/year","status":"pending","priority":"medium"},
+    "APR-004": {"anomaly_id":"ANO-006","title":"Shutdown Idle RDS Instance","requested_by":"system_agent","requested_at":"2025-03-15T09:20:00Z","action":"shutdown_resource","impact":"Save \u20b941,000/month \u00b7 \u20b94,92,000/year","status":"pending","priority":"high"}
+  },
+  "action_log": {
+    "ACT-001": {"anomaly_id":"ANO-003","action":"cancel_licenses","description":"Downgraded Slack from 120 to 20 seats. Pro plan retained. 100 unused seats cancelled.","executed_by":"action_agent","approved_by":"approver@recuraops.io","timestamp":"2025-03-14T12:00:00Z","status":"completed","verification_status":"verified","verified_at":"2025-03-14T12:01:00Z","savings_realized_monthly":60000,"savings_realized_annual":720000},
+    "ACT-002": {"anomaly_id":"ANO-005","action":"shutdown_resource","description":"EC2 instance i-0a4b2c3d4e5f6g7h8 stopped. AMI snapshot created before shutdown.","executed_by":"action_agent","approved_by":"admin@recuraops.io","timestamp":"2025-03-13T14:30:00Z","status":"completed","verification_status":"verified","verified_at":"2025-03-13T14:31:00Z","savings_realized_monthly":28000,"savings_realized_annual":336000}
+  },
+  "kpi_summary": {
+    "total_savings_realized_annual":1056000,"total_savings_potential_annual":2739200,
+    "active_issues":4,"pending_approvals":4,"actions_executed":2,
+    "detection_accuracy_pct":94.7,"last_scan":"2025-03-15T10:30:00Z"
+  }
+}
