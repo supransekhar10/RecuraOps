@@ -284,16 +284,6 @@ pip install -r requirements.txt
 - The `@require_auth` middleware protects all non-login routes
 
 ---
-
-## 🏆 Built For
-
-> **Hackathon 2025** — *Autonomous AI Agent Track*
-
-**Team:** RecuraOps  
-**Stack:** Flask · Firebase · OpenAI GPT-4o · scikit-learn · APScheduler
-
----
-
 ## 📄 License
 
 MIT License — see [LICENSE](LICENSE) for details.
