@@ -1,4 +1,4 @@
-# RecuraOps 🤖💸
+# RecuraOps
 ### Autonomous Cost Intelligence & Recovery Engine
 
 > **RecuraOps** is a 5-agent AI-powered platform that autonomously detects, decides on, and recovers enterprise cost leakages — from duplicate invoices to idle cloud resources — with human approval at every step.
