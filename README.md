@@ -1,289 +1,179 @@
-# RecuraOps
-### Autonomous Cost Intelligence & Recovery Engine
+<div align="center">
+  <img src="app/static/images/recuraops-logo.png" alt="RecuraOps logo" width="140">
+  <h1>RecuraOps</h1>
+  <p><strong>Cost intelligence and recovery workflows for operations teams</strong></p>
+  <p>Find potential cost leaks, review AI-assisted recommendations, and track approved actions.</p>
+  <p>
+    <a href="#overview">Overview</a> ·
+    <a href="#workflow">Workflow</a> ·
+    <a href="#getting-started">Getting started</a> ·
+    <a href="#project-structure">Project structure</a>
+  </p>
+</div>
 
-> **RecuraOps** is a 5-agent AI-powered platform that autonomously detects, decides on, and recovers enterprise cost leakages — from duplicate invoices to idle cloud resources — with human approval at every step.
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white" alt="Python 3.10+">
+  <img src="https://img.shields.io/badge/Flask-3.x-000000?logo=flask&logoColor=white" alt="Flask 3">
+  <img src="https://img.shields.io/badge/Firebase-Realtime%20Database-FFCA28?logo=firebase&logoColor=black" alt="Firebase Realtime Database">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-lightgrey" alt="MIT License"></a>
+</p>
 
-[![Python](https://img.shields.io/badge/Python-3.10+-blue?logo=python)](https://python.org)
-[![Flask](https://img.shields.io/badge/Flask-3.x-black?logo=flask)](https://flask.palletsprojects.com)
-[![Firebase](https://img.shields.io/badge/Firebase-Realtime%20DB-orange?logo=firebase)](https://firebase.google.com)
-[![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o-green?logo=openai)](https://openai.com)
-[![License](https://img.shields.io/badge/License-MIT-lightgrey)](LICENSE)
+> [!IMPORTANT]
+> **Prototype and demo use only.** RecuraOps uses seeded Firebase data. Its action workflow updates demo records in Firebase; it does not connect to real payment, SaaS, or cloud control planes. The AI recommendations and simulated savings are not independently validated. Use a dedicated test Firebase project: `python seed_firebase.py` replaces the entire `/recuraops` database node.
 
----
+## Overview
 
-## 🎯 What It Does
+| Item | Details |
+| --- | --- |
+| Purpose | Identify potential invoice, subscription, and cloud-resource cost anomalies. |
+| Workflow | Collect data, detect anomalies, generate recommendations, request approval, record an action, and verify the result. |
+| Human review | Approval requests are shown in the application before the action agent processes them. |
+| Data | Demo records are loaded from `seed_data.json` into Firebase Realtime Database. |
+| Interface | Flask web application with a dashboard, anomaly views, approval queue, and action log. |
 
-| Problem | RecuraOps Solution |
-|---|---|
-| Duplicate invoices paid twice | Detection Agent → flags same vendor/amount/ref within 30 days |
-| SaaS licenses nobody uses | Detection Agent → flags < 15% utilization |
-| Cloud servers sitting idle | Detection Agent → flags CPU < 5%, inactive > 14 days |
-| Cost spikes with no explanation | ML IsolationForest + Z-score detects statistical anomalies |
-| Analysts spend weeks auditing | RecuraOps scans everything in **< 5 minutes**, continuously |
+## Capabilities
 
-**In our demo scenario:** ₹29,59,200 in annual cost leakage identified across just 6 issues.
+- Detect possible duplicate invoices, underused subscriptions, and idle cloud resources.
+- Apply statistical anomaly helpers for cost data.
+- Use OpenAI to propose severity, reasoning, financial impact, and an action.
+- Review approval requests and track action status in an audit log.
+- View dashboard KPIs and agent status.
+- Format monetary values in Indian rupees.
 
----
+## Workflow
 
-## 🏗️ Architecture — 5-Agent Pipeline
+| Stage | Responsibility |
+| --- | --- |
+| Monitoring | Reads invoices, subscriptions, and cloud-resource records from Firebase on a configurable schedule. |
+| Detection | Applies rule-based checks and creates anomaly records. |
+| Decision | Requests a structured recommendation from the configured OpenAI model. |
+| Approval | Presents proposed actions for review in the approvals queue. |
+| Action | Updates the corresponding demo record after an approval is recorded. |
+| Verification | Checks the record update and refreshes KPI summaries. |
 
-```
-Firebase Realtime DB
-       │
-       ▼
-┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│ Monitoring Agent│────▶│ Detection Agent  │────▶│ Decision Agent  │
-│ (every 5 min)   │     │ Rules + ML       │     │ GPT-4o Reasoning│
-└─────────────────┘     └──────────────────┘     └────────┬────────┘
-                                                           │
-                                              ┌────────────▼────────────┐
-                                              │  👤 Human Approval Gate  │
-                                              └────────────┬────────────┘
-                                                           │
-                                              ┌────────────▼────────────┐    ┌──────────────────┐
-                                              │    Action Agent         │───▶│ Verification Agent│
-                                              │ Executes Approved Tasks │    │ Confirms + KPIs  │
-                                              └─────────────────────────┘    └──────────────────┘
-```
+The implementation uses Flask, Firebase Admin SDK, Firebase Authentication in the browser, OpenAI, scikit-learn, SciPy, NumPy, pandas, and APScheduler.
 
-### Agents
+## Getting started
 
-| Agent | Role | Technology |
-|---|---|---|
-| **Monitoring Agent** | Fetches vendor invoices, SaaS subscriptions, cloud resources every 5 min | Firebase Admin SDK + APScheduler |
-| **Detection Agent** | Rule-based checks + ML anomaly detection | IsolationForest, Z-score (scikit-learn) |
-| **Decision Agent** | AI reasoning — severity, financial impact, recommended action | OpenAI GPT-4o |
-| **Action Agent** | Executes: block_payment, cancel_licenses, shutdown_resource, notify | Firebase writes |
-| **Verification Agent** | Confirms action success, updates KPI summary | Firebase Admin SDK |
+### Requirements
 
----
+- Python 3.10 or newer
+- A Firebase project with Realtime Database and Authentication enabled
+- A Firebase service-account JSON file
+- An OpenAI API key for AI-generated recommendations
 
-## ✨ Features
-
-- **Dashboard** — Live KPIs: savings realized, active issues, pending approvals, actions executed
-- **Anomaly Feed** — Color-coded severity (Critical → Low), AI-generated descriptions
-- **Anomaly Detail** — Full GPT-4o reasoning, financial impact (monthly + annual), recommended action
-- **Approvals Queue** — One-click approve/reject with confirmation modal and projected savings
-- **Action Log** — Complete audit trail: who approved, what was executed, savings locked in
-- **Agent Status Widget** — Live status dots for all 5 agents in the sidebar
-- **INR Formatting** — All monetary values in Indian number format (₹10,56,000)
-- **Pastel Design System** — Premium UI with Fraunces + DM Sans fonts, Lucide icons
-
----
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-- Python 3.10+
-- Firebase project with Realtime Database enabled
-- OpenAI API key (GPT-4o access)
-
-### 1. Clone the Repository
+### 1. Clone and install
 
 ```bash
 git clone https://github.com/supransekhar10/RecuraOps.git
 cd RecuraOps
+
+python -m venv .venv
 ```
 
-### 2. Install Dependencies
+Activate the environment, then install dependencies:
 
 ```bash
+# macOS / Linux
+source .venv/bin/activate
+
+# Windows PowerShell
+.\.venv\Scripts\Activate.ps1
+
 pip install -r requirements.txt
 ```
 
-### 3. Configure Environment Variables
+### 2. Configure the environment
 
-Create a `.env` file in the root directory:
+Create a `.env` file in the repository root:
 
-```env
-# Flask
-FLASK_SECRET_KEY=your-secret-key-here
+```dotenv
+FLASK_SECRET_KEY=replace-with-a-long-random-secret
 FLASK_DEBUG=True
-APP_HOST=0.0.0.0
+APP_HOST=127.0.0.1
 APP_PORT=5000
 
-# Firebase
 FIREBASE_CREDENTIALS=firebase_service_account.json
 FIREBASE_DB_URL=https://your-project-default-rtdb.firebaseio.com
-FIREBASE_API_KEY=your-web-api-key
+FIREBASE_API_KEY=your-firebase-web-api-key
 FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
 FIREBASE_PROJECT_ID=your-project-id
 FIREBASE_STORAGE_BUCKET=your-project.appspot.com
 FIREBASE_MESSAGING_SENDER_ID=your-sender-id
 FIREBASE_APP_ID=your-app-id
 
-# OpenAI
-OPENAI_API_KEY=sk-your-openai-api-key
+OPENAI_API_KEY=your-openai-api-key
+OPENAI_MODEL=gpt-4o
 
-# Agent Config
 AGENT_SCAN_INTERVAL_MINUTES=5
 ACTION_POLL_INTERVAL_MINUTES=2
 ```
 
-### 4. Add Firebase Service Account
+Set additional thresholds in `app/config.py` as needed. Never commit `.env` or the service-account file. The service-account JSON path is relative to the working directory unless you provide an absolute path.
 
-Download your Firebase service account JSON from:
-> Firebase Console → Project Settings → Service Accounts → Generate New Private Key
+### 3. Add Firebase credentials
 
-Save it as `firebase_service_account.json` in the project root.
+In Firebase Console, create a service-account key for your test project and save it at the configured `FIREBASE_CREDENTIALS` path. Configure Firebase Authentication and the Realtime Database URL for the same project.
 
-### 5. Create Firebase Auth Users
+### 4. Create demo users and load demo data
 
 ```bash
 python seed_users.py
-```
-
-This creates 3 demo users:
-| Email | Password | Role |
-|---|---|---|
-| `admin@recuraops.io` | `Admin@123` | Admin (CFO) |
-| `analyst@recuraops.io` | `Analyst@123` | Analyst |
-| `approver@recuraops.io` | `Approver@123` | Approver |
-
-### 6. Seed Demo Data
-
-```bash
 python seed_firebase.py
 ```
 
-Seeds the Firebase Realtime DB with:
-- 6 vendor invoices (with a duplicate)
-- 4 SaaS subscriptions (with underutilized ones)
-- 4 cloud resources (with idle instances)
-- Pre-generated anomalies, approval requests, and action log
+The user seeder contains sample demo credentials in source. Change or remove those credentials before sharing a deployment. The data seeder overwrites `/recuraops`; run it only against a disposable demo database.
 
-### 7. Run the Application
+### 5. Start the application
 
 ```bash
 python run.py
 ```
 
-Open **http://localhost:5000** — login with any demo account above.
+Open [http://localhost:5000](http://localhost:5000) and sign in with a demo Firebase Authentication user.
 
----
+## API
 
-## 📁 Project Structure
-
-```
-RecuraOps/
-├── app/
-│   ├── __init__.py          # Flask app factory + scheduler + template filters
-│   ├── config.py            # Environment config loader
-│   ├── auth/
-│   │   ├── routes.py        # Login / logout routes
-│   │   └── middleware.py    # @require_auth decorator
-│   ├── dashboard/
-│   │   └── routes.py        # Dashboard KPIs + anomaly feed
-│   ├── anomalies/
-│   │   └── routes.py        # Anomaly list + detail view
-│   ├── approvals/
-│   │   └── routes.py        # Approval queue + approve/reject actions
-│   ├── actions/
-│   │   └── routes.py        # Action audit log
-│   ├── api/
-│   │   └── routes.py        # REST API: /api/kpi, /api/anomalies, /api/run-scan
-│   ├── agents/
-│   │   ├── __init__.py      # Agent status registry
-│   │   ├── monitoring_agent.py   # Data fetcher (APScheduler)
-│   │   ├── detection_agent.py    # Rule-based + ML anomaly detection
-│   │   ├── decision_agent.py     # GPT-4o reasoning engine
-│   │   ├── action_agent.py       # Action executor
-│   │   └── verification_agent.py # Post-action verification
-│   ├── ml/
-│   │   └── anomaly_detector.py   # IsolationForest + Z-score helpers
-│   ├── static/
-│   │   ├── css/
-│   │   │   ├── main.css          # Design system tokens + layout
-│   │   │   └── components.css    # KPI cards, tables, modals, timeline
-│   │   ├── js/
-│   │   │   ├── firebase-init.js  # Firebase Web SDK auth flow
-│   │   │   └── dashboard.js      # Chart.js donut, KPI polling, scan button
-│   │   └── images/
-│   │       └── recuraops-logo.png
-│   └── templates/
-│       ├── base.html             # Sidebar layout, agent status widget
-│       ├── auth/login.html       # Firebase auth login card
-│       ├── dashboard/index.html  # KPI grid + anomaly feed + chart
-│       ├── anomalies/
-│       │   ├── list.html         # Filterable anomaly table
-│       │   └── detail.html       # Full AI reasoning panel
-│       ├── approvals/index.html  # Approval cards + confirm modal
-│       └── actions/log.html      # Audit trail table
-├── .env                     # ⚠️ Not committed — see setup above
-├── firebase_service_account.json  # ⚠️ Not committed — add manually
-├── requirements.txt
-├── run.py                   # App entry point
-├── seed_firebase.py         # Demo data seeder
-└── seed_users.py            # Firebase Auth user creator
-```
-
----
-
-## 🔌 API Endpoints
+All listed endpoints require an authenticated application session.
 
 | Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/kpi` | Current KPI summary JSON |
-| `GET` | `/api/anomalies` | All anomalies JSON |
-| `POST` | `/api/run-scan` | Manually trigger Monitoring Agent |
-| `GET` | `/api/agent-status` | Live agent health + last run timestamps |
+| --- | --- | --- |
+| `GET` | `/api/kpi` | Return the KPI summary. |
+| `GET` | `/api/anomalies` | Return anomalies ordered by detection time. |
+| `POST` | `/api/run-scan` | Start a monitoring scan in the background. |
+| `GET` | `/api/agent-status` | Return the in-process agent status. |
 
----
+## Project structure
 
-## 🧠 Detection Logic
-
-### Rule-Based Checks
-| Rule | Trigger Condition |
-|---|---|
-| Duplicate Invoice | Same vendor + amount + reference number, within 30 days |
-| Cost Spike | Current month spend > 3-month average × 1.20 |
-| Inactive Subscription | License utilization < 15% |
-| Idle Cloud Resource | CPU < 5% AND last active > 14 days |
-
-### Machine Learning
-- **IsolationForest** (scikit-learn) — detects statistical outliers in time-series spend data
-- **Z-score** (scipy) — flags per-vendor deviations beyond 2σ threshold
-
-### AI Decision Engine (GPT-4o)
-For each confirmed anomaly, the Decision Agent sends a structured prompt to GPT-4o and receives:
-- `severity` — critical / high / medium / low
-- `recommended_action` — block_payment / cancel_licenses / shutdown_resource / notify_only
-- `reasoning` — detailed natural-language explanation
-- `financial_impact_monthly` / `financial_impact_annual` — rupee values
-- `confidence_score` — 0.0–1.0
-
----
-
-## 📦 Dependencies
-
-```
-flask
-firebase-admin
-openai
-scikit-learn
-scipy
-numpy
-apscheduler
-python-dotenv
-requests
+```text
+app/
+  actions/       Action-log routes
+  agents/        Monitoring, detection, decision, action, and verification agents
+  anomalies/     Anomaly list and detail routes
+  api/           Authenticated JSON endpoints
+  approvals/     Approval queue routes
+  auth/          Login routes and session middleware
+  dashboard/     Dashboard routes
+  ml/            Statistical anomaly helpers
+  static/        CSS, JavaScript, and brand assets
+  templates/     Jinja templates
+  config.py      Environment-backed application configuration
+run.py            Local Flask entry point
+seed_data.json    Synthetic Firebase demo records
+seed_firebase.py  Demo database seeder (overwrites /recuraops)
+seed_users.py     Firebase Authentication demo-user seeder
+requirements.txt  Python dependencies
 ```
 
-Install all with:
-```bash
-pip install -r requirements.txt
-```
+## Security and limitations
 
----
+- Keep `FLASK_DEBUG=False` outside local development and use a unique, strong `FLASK_SECRET_KEY`.
+- Keep the Firebase service-account key and OpenAI API key on the server. Restrict Firebase Authentication and Realtime Database access with project-specific rules.
+- Replace or remove the sample credentials in `seed_users.py` before sharing or deploying the app.
+- Treat seeded records, AI recommendations, and displayed savings as illustrative demo data.
+- The included `run.py` uses Flask's development server. Choose and configure a production WSGI server and deployment environment before exposing the application publicly.
 
-## 🔐 Security Notes
+## License
 
-- `.env` and `firebase_service_account.json` are in `.gitignore` — **never commit them**
-- Firebase ID tokens are verified server-side via `firebase-admin` on every protected route
-- Sessions are server-side with a secret key
-- The `@require_auth` middleware protects all non-login routes
+RecuraOps is released under the MIT License. See [LICENSE](LICENSE).
 
----
-## 📄 License
-
-MIT License — see [LICENSE](LICENSE) for details.
