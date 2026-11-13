@@ -3,12 +3,6 @@
   <h1>RecuraOps</h1>
   <p><strong>Cost intelligence and recovery workflows for operations teams</strong></p>
   <p>Find potential cost leaks, review AI-assisted recommendations, and track approved actions.</p>
-  <p>
-    <a href="#overview">Overview</a> ·
-    <a href="#workflow">Workflow</a> ·
-    <a href="#getting-started">Getting started</a> ·
-    <a href="#project-structure">Project structure</a>
-  </p>
 </div>
 
 <p align="center">
