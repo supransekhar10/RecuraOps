@@ -19,39 +19,37 @@
 </p>
 
 > [!IMPORTANT]
-> **Prototype and demo use only.** RecuraOps uses seeded Firebase data. Its action workflow updates demo records in Firebase; it does not connect to real payment, SaaS, or cloud control planes. The AI recommendations and simulated savings are not independently validated. Use a dedicated test Firebase project: `python seed_firebase.py` replaces the entire `/recuraops` database node.
+> **Prototype and demo use only.** RecuraOps uses seeded Firebase data. Its action workflow updates demo records in Firebase; it does not connect to real payment, SaaS, or cloud control planes. AI recommendations and estimated savings are illustrative, not independently validated. Use a dedicated test Firebase project: `python seed_firebase.py` replaces the entire `/recuraops` database node.
 
 ## Overview
 
 | Item | Details |
 | --- | --- |
 | Purpose | Identify potential invoice, subscription, and cloud-resource cost anomalies. |
-| Workflow | Collect data, detect anomalies, generate recommendations, request approval, record an action, and verify the result. |
-| Human review | Approval requests are shown in the application before the action agent processes them. |
+| Workflow | Monitor records, detect anomalies, request AI recommendations, review proposed actions, and track verification. |
 | Data | Demo records are loaded from `seed_data.json` into Firebase Realtime Database. |
 | Interface | Flask web application with a dashboard, anomaly views, approval queue, and action log. |
 
 ## Capabilities
 
-- Detect possible duplicate invoices, underused subscriptions, and idle cloud resources.
-- Apply statistical anomaly helpers for cost data.
-- Use OpenAI to propose severity, reasoning, financial impact, and an action.
+- Detect possible duplicate invoices, underused subscriptions, and idle cloud resources using rule-based checks.
+- Request severity, reasoning, financial-impact estimates, and action recommendations from the configured OpenAI model.
 - Review approval requests and track action status in an audit log.
-- View dashboard KPIs and agent status.
+- View dashboard KPIs and in-process agent status.
 - Format monetary values in Indian rupees.
 
 ## Workflow
 
 | Stage | Responsibility |
 | --- | --- |
-| Monitoring | Reads invoices, subscriptions, and cloud-resource records from Firebase on a configurable schedule. |
-| Detection | Applies rule-based checks and creates anomaly records. |
+| Monitoring | Reads invoice, subscription, and cloud-resource records from Firebase on a configurable schedule. |
+| Detection | Applies duplicate, utilization, CPU, and last-active rules to create anomaly records. |
 | Decision | Requests a structured recommendation from the configured OpenAI model. |
-| Approval | Presents proposed actions for review in the approvals queue. |
+| Approval | Presents proposed actions in the application for review. |
 | Action | Updates the corresponding demo record after an approval is recorded. |
 | Verification | Checks the record update and refreshes KPI summaries. |
 
-The implementation uses Flask, Firebase Admin SDK, Firebase Authentication in the browser, OpenAI, scikit-learn, SciPy, NumPy, pandas, and APScheduler.
+The implementation uses Flask, Firebase Admin SDK, Firebase Authentication in the browser, OpenAI, and APScheduler.
 
 ## Getting started
 
@@ -154,7 +152,6 @@ app/
   approvals/     Approval queue routes
   auth/          Login routes and session middleware
   dashboard/     Dashboard routes
-  ml/            Statistical anomaly helpers
   static/        CSS, JavaScript, and brand assets
   templates/     Jinja templates
   config.py      Environment-backed application configuration
@@ -167,13 +164,12 @@ requirements.txt  Python dependencies
 
 ## Security and limitations
 
-- Keep `FLASK_DEBUG=False` outside local development and use a unique, strong `FLASK_SECRET_KEY`.
+- Set `FLASK_DEBUG=False` outside local development and use a unique, strong `FLASK_SECRET_KEY`.
 - Keep the Firebase service-account key and OpenAI API key on the server. Restrict Firebase Authentication and Realtime Database access with project-specific rules.
 - Replace or remove the sample credentials in `seed_users.py` before sharing or deploying the app.
 - Treat seeded records, AI recommendations, and displayed savings as illustrative demo data.
-- The included `run.py` uses Flask's development server. Choose and configure a production WSGI server and deployment environment before exposing the application publicly.
+- The included `run.py` uses Flask's development server. Configure a production WSGI server and deployment environment before exposing the application publicly.
 
 ## License
 
 RecuraOps is released under the MIT License. See [LICENSE](LICENSE).
-
